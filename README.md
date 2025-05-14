@@ -37,7 +37,7 @@ Terminal Enhancer provides a hassle-free setup of modern terminal tools:
 ### Automated Installation (Recommended)
 
 ```bash
-curl -sL https://raw.githubusercontent.com/yourusername/terminal-enhancer/main/terminal-enhancer.sh | bash
+curl -sL https://raw.githubusercontent.com/sohaib1khan/TermForge/refs/heads/main/termforge.sh | bash
 ```
 
 ### Manual Installation
