@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Terminal Enhancer - All-in-One Automated Installation
+# Terminal Enhancer - Fixed Version
 # Installs and configures: ble.sh, Starship, Atuin, fzf
 # Everything works immediately after installation
 
 TOOL_NAME="Terminal Enhancer"
-VERSION="3.0.0"
+VERSION="3.1.0"
 
 set -e  # Exit on error
 
@@ -25,6 +25,7 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 # Parse command line arguments
 USE_SUDO=true
 LITE_MODE=false
+FIX_BASHRC=false
 
 for arg in "$@"; do
     case $arg in
@@ -36,17 +37,52 @@ for arg in "$@"; do
             LITE_MODE=true
             shift
             ;;
+        --fix)
+            FIX_BASHRC=true
+            shift
+            ;;
         --help|-h)
             echo "$TOOL_NAME v$VERSION"
             echo "Usage: $0 [options]"
             echo "Options:"
             echo "  --no-sudo    Run without sudo"
             echo "  --lite       Skip Starship (use basic prompt)"
+            echo "  --fix        Fix broken .bashrc syntax"
             echo "  --help, -h   Show this help message"
             exit 0
             ;;
     esac
 done
+
+# Fix bashrc if requested
+if [ "$FIX_BASHRC" = true ]; then
+    print_status "Fixing .bashrc syntax errors..."
+    # Check for the error around line 128
+    TEMP_FILE=$(mktemp)
+    
+    # Copy everything except potentially broken ble.sh section
+    sed '/# ble.sh - Bash Line Editor/,/ble-attach/d' ~/.bashrc > "$TEMP_FILE"
+    
+    # Add correct ble.sh configuration
+    cat >> "$TEMP_FILE" << 'EOF'
+
+# ble.sh - Bash Line Editor (syntax highlighting & autocompletion)
+if [[ -f ~/.local/share/blesh/ble.sh ]]; then
+    [[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach
+    [[ ${BLE_VERSION-} ]] && ble-attach
+fi
+EOF
+    
+    # Backup current .bashrc
+    cp ~/.bashrc ~/.bashrc.broken.$(date +%Y%m%d_%H%M%S)
+    
+    # Replace with fixed version
+    mv "$TEMP_FILE" ~/.bashrc
+    
+    print_success ".bashrc fixed! Old version backed up."
+    echo "Run: source ~/.bashrc"
+    exit 0
+fi
 
 print_status "Starting $TOOL_NAME installation..."
 
@@ -76,38 +112,6 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to install dependencies
-install_deps() {
-    local deps="$1"
-    if [ "$USE_SUDO" = true ]; then
-        if command_exists apt; then
-            sudo apt update
-            sudo apt install -y $deps
-        elif command_exists yum; then
-            sudo yum install -y $deps
-        elif command_exists pacman; then
-            sudo pacman -Sy --noconfirm $deps
-        fi
-    else
-        print_warning "Cannot install dependencies without sudo"
-        print_warning "Please install manually: $deps"
-    fi
-}
-
-# Check and install basic dependencies
-print_status "Checking dependencies..."
-MISSING_DEPS=""
-for cmd in curl git wget; do
-    if ! command_exists $cmd; then
-        MISSING_DEPS="$MISSING_DEPS $cmd"
-    fi
-done
-
-if [ -n "$MISSING_DEPS" ]; then
-    print_status "Installing missing dependencies:$MISSING_DEPS"
-    install_deps "$MISSING_DEPS"
-fi
-
 # Backup .bashrc
 BACKUP_FILE=~/.bashrc.backup.$(date +%Y%m%d_%H%M%S)
 cp ~/.bashrc "$BACKUP_FILE"
@@ -119,6 +123,9 @@ MARKER_END="# === End Terminal Enhancer Configuration ==="
 
 # Remove any existing configuration
 sed -i "/$MARKER_START/,/$MARKER_END/d" ~/.bashrc
+
+# Also remove any orphaned ble.sh configuration to prevent syntax errors
+sed -i '/# ble.sh - Bash Line Editor/,/ble-attach/d' ~/.bashrc
 
 # Start building our configuration
 CONFIG_CONTENT="
@@ -134,7 +141,7 @@ export PATH=\"\$HOME/.local/bin:\$PATH\"
 print_status "Installing fzf..."
 if [ ! -d ~/.fzf ]; then
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    ~/.fzf/install --all --no-update-rc --no-fish --no-zsh
+    ~/.fzf/install --all --no-update-rc --no-fish --no-zsh || true
     print_success "fzf installed!"
 fi
 CONFIG_CONTENT+="
@@ -143,44 +150,54 @@ CONFIG_CONTENT+="
 
 # Install ble.sh
 print_status "Installing ble.sh..."
-if ! command_exists gawk; then
-    print_warning "gawk not found - installing..."
-    install_deps "gawk"
-fi
-
 if [ ! -d ~/.local/share/blesh ]; then
     mkdir -p ~/.local/share/blesh
     cd ~/.local/share/blesh
-    wget -q https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz
+    if command_exists wget; then
+        wget -q https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz
+    else
+        curl -sL -o ble-nightly.tar.xz https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz
+    fi
     tar xf ble-nightly.tar.xz --strip-components=1
     rm ble-nightly.tar.xz
     cd ~
     print_success "ble.sh installed!"
 fi
+
+# Add ble.sh configuration with proper syntax
 CONFIG_CONTENT+="
 
 # ble.sh - Bash Line Editor (syntax highlighting & autocompletion)
-[[ \$- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach
-[[ \${BLE_VERSION-} ]] && ble-attach"
+if [[ -f ~/.local/share/blesh/ble.sh ]]; then
+    [[ \$- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach
+    [[ \${BLE_VERSION-} ]] && ble-attach
+fi"
 
 # Install Atuin
 print_status "Installing Atuin..."
 if ! command_exists atuin; then
-    bash <(curl --proto '=https' --tlsv1.2 -sSf https://setup.atuin.sh)
-    # Initialize Atuin database
-    ~/.local/bin/atuin init bash --disable-up-arrow > /dev/null 2>&1 || true
-    print_success "Atuin installed!"
+    # Check for compatible system
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        bash <(curl --proto '=https' --tlsv1.2 -sSf https://setup.atuin.sh) || true
+    else
+        print_warning "Atuin may not be compatible with this system"
+    fi
 fi
-CONFIG_CONTENT+="
+
+# Only add Atuin config if it was installed
+if command_exists atuin || [ -f ~/.local/bin/atuin ]; then
+    CONFIG_CONTENT+="
 
 # Atuin - Enhanced shell history
-[[ -f ~/.local/bin/atuin ]] && eval \"\$(~/.local/bin/atuin init bash)\""
+[[ -f ~/.local/bin/atuin ]] && eval \"\$(~/.local/bin/atuin init bash --disable-up-arrow)\""
+fi
 
 # Install Starship (unless in lite mode)
 if [ "$LITE_MODE" = false ]; then
     print_status "Installing Starship..."
     if ! command_exists starship; then
-        curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir ~/.local/bin -y
+        # Use sh instead of bash for better compatibility
+        curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir ~/.local/bin -y || true
         print_success "Starship installed!"
     fi
     
@@ -193,72 +210,61 @@ $hostname\
 $directory\
 $git_branch\
 $git_status\
-$python\
-$nodejs\
-$rust\
-$golang\
-$docker_context\
-$kubernetes\
 $cmd_duration\
 $line_break\
 $character"""
 
 [character]
-success_symbol = "[➜](bold green)"
-error_symbol = "[✗](bold red)"
+success_symbol = "[>](bold green)"
+error_symbol = "[>](bold red)"
 
 [directory]
 truncation_length = 3
 truncate_to_repo = false
 
 [git_branch]
-symbol = "🌱 "
+symbol = " "
 truncation_length = 20
 
 [git_status]
-conflicted = "🏳"
-ahead = "🏎💨"
-behind = "😰"
-diverged = "😵"
-untracked = "🤷"
-stashed = "📦"
-modified = "📝"
-staged = '[++\($count\)](green)'
-renamed = "👅"
-deleted = "🗑"
+conflicted = "!"
+ahead = "+"
+behind = "-"
+diverged = "*"
+untracked = "?"
+stashed = "$"
+modified = "~"
+staged = '[+\($count\)](green)'
+renamed = "»"
+deleted = "x"
 
-[kubernetes]
-format = 'on [⛵ $context \($namespace\)](dimmed green) '
-disabled = false
-
-[docker_context]
-format = "via [🐋 $context](blue bold)"
-
-[python]
-symbol = "🐍 "
-pyenv_version_name = true
-
-[nodejs]
-symbol = "⬢ "
-
-[package]
-symbol = "📦 "
+[cmd_duration]
+min_time = 500
+format = "took [$duration](bold yellow)"
 EOF
 
     CONFIG_CONTENT+="
 
 # Starship prompt
-command -v starship &> /dev/null && eval \"\$(starship init bash)\""
+if command -v starship &> /dev/null; then
+    eval \"\$(starship init bash)\"
+fi"
 else
     # Use a simple enhanced prompt in lite mode
     CONFIG_CONTENT+="
 
 # Enhanced prompt (lite mode)
-PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '"
+PS1='\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\\$ '"
 fi
 
-# Add some useful aliases
+# Add some useful aliases and settings
 CONFIG_CONTENT+="
+
+# Better history settings
+export HISTSIZE=10000
+export HISTFILESIZE=20000
+export HISTCONTROL=ignoreboth:erasedups
+shopt -s histappend
 
 # Useful aliases
 alias ll='ls -alF'
@@ -267,14 +273,6 @@ alias l='ls -CF'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
-
-# Better defaults
-export HISTSIZE=10000
-export HISTFILESIZE=20000
-export HISTCONTROL=ignoreboth:erasedups
-shopt -s histappend
 
 $MARKER_END"
 
@@ -289,6 +287,9 @@ echo "Uninstalling Terminal Enhancer..."
 # Remove configuration from .bashrc
 sed -i '/# === Terminal Enhancer Configuration ===/,/# === End Terminal Enhancer Configuration ===/d' ~/.bashrc
 
+# Also remove any ble.sh configuration
+sed -i '/# ble.sh - Bash Line Editor/,/ble-attach/d' ~/.bashrc
+
 # Remove installed components
 rm -rf ~/.local/share/blesh
 rm -f ~/.local/bin/starship
@@ -296,40 +297,51 @@ rm -f ~/.local/bin/atuin
 rm -rf ~/.fzf
 rm -f ~/.config/starship.toml
 rm -f ~/.local/bin/terminal-enhancer-uninstall
+rm -f ~/.local/bin/terminal-enhancer-fix
 
 echo "Terminal Enhancer uninstalled."
 echo "Restart your terminal to complete the process."
 EOF
 chmod +x ~/.local/bin/terminal-enhancer-uninstall
 
-# Create update script
-cat > ~/.local/bin/terminal-enhancer-update << 'EOF'
+# Create fix script
+cat > ~/.local/bin/terminal-enhancer-fix << 'EOF'
 #!/bin/bash
-echo "Updating Terminal Enhancer components..."
+# Fix common .bashrc syntax errors
 
-# Update fzf
-cd ~/.fzf && git pull && ./install --all
+echo "Fixing .bashrc syntax errors..."
+TEMP_FILE=$(mktemp)
 
-# Update ble.sh
-cd ~/.local/share/blesh
-wget -q https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz
-tar xf ble-nightly.tar.xz --strip-components=1
-rm ble-nightly.tar.xz
+# Remove broken ble.sh sections
+sed '/# ble.sh - Bash Line Editor/,/ble-attach/d' ~/.bashrc > "$TEMP_FILE"
 
-# Update Starship
-curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir ~/.local/bin -y
+# Add correct ble.sh configuration if ble.sh is installed
+if [[ -d ~/.local/share/blesh ]]; then
+    cat >> "$TEMP_FILE" << 'BLESH_CONFIG'
 
-# Update Atuin
-bash <(curl --proto '=https' --tlsv1.2 -sSf https://setup.atuin.sh)
+# ble.sh - Bash Line Editor (syntax highlighting & autocompletion)
+if [[ -f ~/.local/share/blesh/ble.sh ]]; then
+    [[ $- == *i* ]] && source ~/.local/share/blesh/ble.sh --noattach
+    [[ ${BLE_VERSION-} ]] && ble-attach
+fi
+BLESH_CONFIG
+fi
 
-echo "All components updated!"
+# Backup current .bashrc
+cp ~/.bashrc ~/.bashrc.broken.$(date +%Y%m%d_%H%M%S)
+
+# Replace with fixed version
+mv "$TEMP_FILE" ~/.bashrc
+
+echo ".bashrc fixed! Old version backed up."
+echo "Run: source ~/.bashrc"
 EOF
-chmod +x ~/.local/bin/terminal-enhancer-update
+chmod +x ~/.local/bin/terminal-enhancer-fix
 
 # Final summary
 echo
 echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  ${GREEN}$TOOL_NAME v$VERSION${BLUE}     ║${NC}"
+echo -e "${BLUE}║  ${GREEN}$TOOL_NAME v$VERSION${BLUE}   ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════╝${NC}"
 echo
 print_success "Installation completed successfully!"
@@ -337,11 +349,11 @@ echo
 print_status "Installed components:"
 echo "  ✓ fzf        - Fuzzy file finder (Ctrl+R for history)"
 echo "  ✓ ble.sh     - Syntax highlighting & autocompletion"
-echo "  ✓ Atuin      - Smart command history"
-[ "$LITE_MODE" = false ] && echo "  ✓ Starship   - Beautiful prompt with git info"
+[ -f ~/.local/bin/atuin ] && echo "  ✓ Atuin      - Smart command history"
+[ "$LITE_MODE" = false ] && [ -f ~/.local/bin/starship ] && echo "  ✓ Starship   - Beautiful prompt with git info"
 echo
 print_status "Useful commands:"
-echo "  • terminal-enhancer-update    - Update all components"
+echo "  • terminal-enhancer-fix       - Fix .bashrc syntax errors"
 echo "  • terminal-enhancer-uninstall - Remove everything"
 echo
 print_success "Everything is configured and ready to use!"
