@@ -54,8 +54,35 @@ chmod +x termforge.sh
 # Run the installer
 ./termforge.sh
 
-# Or skip alias installation
-./termforge.sh --skip-aliases
+# Run without sudo (for containers or restricted environments)
+./termforge.sh --no-sudo
+
+# Container mode (no sudo, no automatic dependencies)
+./termforge.sh --container
+
+# Skip alias installation
+./termforge.sh --no-aliases
+
+# Minimal installation
+./termforge.sh --minimal
+```
+
+## 🐳 Container Usage
+
+Termforge works great in Docker containers and other containerized environments:
+
+```dockerfile
+# In your Dockerfile
+RUN apt update && apt install -y curl git wget gawk
+RUN curl -sL https://raw.githubusercontent.com/sohaib1khan/TermForge/refs/heads/main/termforge.sh | bash -s -- --container
+```
+
+Or run manually in a container:
+```bash
+# Inside container
+./termforge.sh --container
+# or
+./termforge.sh --no-sudo --no-deps
 ```
 
 ## 🛡️ Safe Installation
@@ -66,6 +93,8 @@ Termforge is designed to be non-destructive:
 - **Backs up .bashrc** - Creates timestamped backup before modifications
 - **Checks for existing installations** - Won't duplicate configurations
 - **Optional components** - Use `--skip-aliases` to skip alias installation
+- **No sudo mode** - Use `--no-sudo` for restricted environments
+- **Container mode** - Use `--container` for Docker/Podman environments
 
 ## 📋 Prerequisites
 
