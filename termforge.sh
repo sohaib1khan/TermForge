@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Terminal Enhancer - Fixed Version
+# Termforge - Modern Terminal Enhancement Suite
 # Installs and configures: ble.sh, Starship, Atuin, fzf
 # Everything works immediately after installation
 
-TOOL_NAME="Terminal Enhancer"
+TOOL_NAME="Termforge"
 VERSION="3.1.0"
 
 set -e  # Exit on error
@@ -118,8 +118,8 @@ cp ~/.bashrc "$BACKUP_FILE"
 print_success "Backup created: $BACKUP_FILE"
 
 # Create a marker for our configuration
-MARKER_START="# === Terminal Enhancer Configuration ==="
-MARKER_END="# === End Terminal Enhancer Configuration ==="
+MARKER_START="# === Termforge Configuration ==="
+MARKER_END="# === End Termforge Configuration ==="
 
 # Remove any existing configuration
 sed -i "/$MARKER_START/,/$MARKER_END/d" ~/.bashrc
@@ -131,7 +131,7 @@ sed -i '/# ble.sh - Bash Line Editor/,/ble-attach/d' ~/.bashrc
 CONFIG_CONTENT="
 
 $MARKER_START
-# Added by Terminal Enhancer v$VERSION on $(date)
+# Added by Termforge v$VERSION on $(date)
 
 # Add local bin to PATH
 export PATH=\"\$HOME/.local/bin:\$PATH\"
@@ -280,12 +280,12 @@ $MARKER_END"
 echo "$CONFIG_CONTENT" >> ~/.bashrc
 
 # Create uninstall script
-cat > ~/.local/bin/terminal-enhancer-uninstall << 'EOF'
+cat > ~/.local/bin/uninstall-termforge << 'EOF'
 #!/bin/bash
-echo "Uninstalling Terminal Enhancer..."
+echo "Uninstalling Termforge..."
 
 # Remove configuration from .bashrc
-sed -i '/# === Terminal Enhancer Configuration ===/,/# === End Terminal Enhancer Configuration ===/d' ~/.bashrc
+sed -i '/# === Termforge Configuration ===/,/# === End Termforge Configuration ===/d' ~/.bashrc
 
 # Also remove any ble.sh configuration
 sed -i '/# ble.sh - Bash Line Editor/,/ble-attach/d' ~/.bashrc
@@ -296,16 +296,16 @@ rm -f ~/.local/bin/starship
 rm -f ~/.local/bin/atuin
 rm -rf ~/.fzf
 rm -f ~/.config/starship.toml
-rm -f ~/.local/bin/terminal-enhancer-uninstall
-rm -f ~/.local/bin/terminal-enhancer-fix
+rm -f ~/.local/bin/uninstall-termforge
+rm -f ~/.local/bin/fix-termforge
 
-echo "Terminal Enhancer uninstalled."
+echo "Termforge uninstalled."
 echo "Restart your terminal to complete the process."
 EOF
-chmod +x ~/.local/bin/terminal-enhancer-uninstall
+chmod +x ~/.local/bin/uninstall-termforge
 
 # Create fix script
-cat > ~/.local/bin/terminal-enhancer-fix << 'EOF'
+cat > ~/.local/bin/fix-termforge << 'EOF'
 #!/bin/bash
 # Fix common .bashrc syntax errors
 
@@ -336,12 +336,12 @@ mv "$TEMP_FILE" ~/.bashrc
 echo ".bashrc fixed! Old version backed up."
 echo "Run: source ~/.bashrc"
 EOF
-chmod +x ~/.local/bin/terminal-enhancer-fix
+chmod +x ~/.local/bin/fix-termforge
 
 # Final summary
 echo
 echo -e "${BLUE}╔══════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  ${GREEN}$TOOL_NAME v$VERSION${BLUE}   ║${NC}"
+echo -e "${BLUE}║  ${GREEN}$TOOL_NAME v$VERSION${BLUE}         ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════╝${NC}"
 echo
 print_success "Installation completed successfully!"
@@ -353,8 +353,8 @@ echo "  ✓ ble.sh     - Syntax highlighting & autocompletion"
 [ "$LITE_MODE" = false ] && [ -f ~/.local/bin/starship ] && echo "  ✓ Starship   - Beautiful prompt with git info"
 echo
 print_status "Useful commands:"
-echo "  • terminal-enhancer-fix       - Fix .bashrc syntax errors"
-echo "  • terminal-enhancer-uninstall - Remove everything"
+echo "  • fix-termforge       - Fix .bashrc syntax errors"
+echo "  • uninstall-termforge - Remove everything"
 echo
 print_success "Everything is configured and ready to use!"
 print_status "Just run: ${GREEN}source ~/.bashrc${NC}"
