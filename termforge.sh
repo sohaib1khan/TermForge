@@ -29,6 +29,8 @@ INSTALL_ATUIN=true
 INSTALL_FZF=true
 INSTALL_ALIASES=true
 SAFE_MODE=false
+USE_SUDO=true
+AUTO_INSTALL_DEPS=true
 
 for arg in "$@"; do
     case $arg in
@@ -36,6 +38,22 @@ for arg in "$@"; do
             SAFE_MODE=true
             INSTALL_STARSHIP=false
             print_warning "Safe mode: Installing only basic enhancements"
+            shift
+            ;;
+        --no-sudo)
+            USE_SUDO=false
+            print_warning "Running without sudo. Some features may require manual dependency installation."
+            shift
+            ;;
+        --no-deps)
+            AUTO_INSTALL_DEPS=false
+            print_warning "Skipping automatic dependency installation."
+            shift
+            ;;
+        --container)
+            USE_SUDO=false
+            AUTO_INSTALL_DEPS=false
+            print_warning "Container mode: No sudo, no automatic dependencies"
             shift
             ;;
         --no-starship)
@@ -67,6 +85,9 @@ for arg in "$@"; do
             echo "Options:"
             echo "  --safe          Safe mode (skip problematic components)"
             echo "  --minimal       Minimal installation (fzf + aliases only)"
+            echo "  --no-sudo       Run without sudo (for restricted environments)"
+            echo "  --no-deps       Skip automatic dependency installation"
+            echo "  --container     Container mode (no sudo, no auto dependencies)"
             echo "  --no-starship   Skip Starship prompt"
             echo "  --no-blesh      Skip ble.sh (syntax highlighting)"
             echo "  --no-atuin      Skip Atuin (enhanced history)"
@@ -77,10 +98,21 @@ for arg in "$@"; do
     esac
 done
 
+# Detect if running in a container
+if [ -f /.dockerenv ] || [ -f /run/.containerenv ]; then
+    print_warning "Container environment detected"
+    if [ "$USE_SUDO" = true ]; then
+        print_status "Switching to no-sudo mode for container"
+        USE_SUDO=false
+    fi
+fi
+
 # Check if running as root
 if [[ $EUID -eq 0 ]]; then
-   print_error "This script should not be run as root!"
-   exit 1
+    if [ "$USE_SUDO" = true ]; then
+        print_warning "Running as root. Sudo not needed."
+        USE_SUDO=false
+    fi
 fi
 
 # Check system compatibility
@@ -103,16 +135,48 @@ cp ~/.bashrc "$BACKUP_FILE"
 print_success "Backup created: $BACKUP_FILE"
 
 # Install system dependencies
-print_status "Installing system dependencies..."
-if command -v apt &> /dev/null; then
-    sudo apt update
-    sudo apt install -y curl git wget
-elif command -v yum &> /dev/null; then
-    sudo yum install -y curl git wget
-elif command -v pacman &> /dev/null; then
-    sudo pacman -Sy --noconfirm curl git wget
+if [ "$AUTO_INSTALL_DEPS" = true ]; then
+    print_status "Checking for required dependencies..."
+    MISSING_DEPS=""
+    
+    # Check for required commands
+    for cmd in curl git wget; do
+        if ! command -v $cmd &> /dev/null; then
+            MISSING_DEPS="$MISSING_DEPS $cmd"
+        fi
+    done
+    
+    if [ -n "$MISSING_DEPS" ]; then
+        if [ "$USE_SUDO" = true ]; then
+            print_status "Installing missing dependencies:$MISSING_DEPS"
+            if command -v apt &> /dev/null; then
+                sudo apt update
+                sudo apt install -y $MISSING_DEPS
+            elif command -v yum &> /dev/null; then
+                sudo yum install -y $MISSING_DEPS
+            elif command -v pacman &> /dev/null; then
+                sudo pacman -Sy --noconfirm $MISSING_DEPS
+            else
+                print_warning "Could not detect package manager. Please install: $MISSING_DEPS"
+            fi
+        else
+            print_warning "Missing dependencies:$MISSING_DEPS"
+            print_warning "Please install these manually or run with sudo"
+            print_warning "In a container, you might need to run: apt update && apt install -y$MISSING_DEPS"
+            
+            # Ask if user wants to continue
+            read -p "Continue anyway? (y/n) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_error "Installation cancelled. Please install dependencies first."
+                exit 1
+            fi
+        fi
+    else
+        print_success "All required dependencies are installed"
+    fi
 else
-    print_warning "Could not detect package manager. Please install curl, git, and wget manually."
+    print_warning "Skipping dependency check. Make sure you have: curl, git, wget"
 fi
 
 # Create necessary directories
@@ -147,12 +211,34 @@ if [ "$INSTALL_BLESH" = true ] && [ "$SAFE_MODE" = false ]; then
             rm ble-nightly.tar.xz
             COMPONENTS_INSTALLED="$COMPONENTS_INSTALLED ble.sh"
             print_success "ble.sh installed successfully!"
+            cd ~
         else
             print_warning "ble.sh already installed, skipping..."
         fi
     else
         print_warning "gawk not found. Skipping ble.sh installation."
-        print_status "Install gawk with: sudo apt install gawk"
+        if [ "$USE_SUDO" = true ] && [ "$AUTO_INSTALL_DEPS" = true ]; then
+            print_status "Attempting to install gawk..."
+            if command -v apt &> /dev/null; then
+                sudo apt install -y gawk
+            elif command -v yum &> /dev/null; then
+                sudo yum install -y gawk
+            fi
+            # Try again after installing gawk
+            if command -v gawk &> /dev/null; then
+                print_status "Installing ble.sh (syntax highlighting)..."
+                mkdir -p ~/.local/share/blesh
+                cd ~/.local/share/blesh
+                wget -q https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz
+                tar xf ble-nightly.tar.xz --strip-components=1
+                rm ble-nightly.tar.xz
+                COMPONENTS_INSTALLED="$COMPONENTS_INSTALLED ble.sh"
+                print_success "ble.sh installed successfully!"
+                cd ~
+            fi
+        else
+            print_status "To install ble.sh later, install gawk and re-run the script"
+        fi
     fi
 fi
 
@@ -306,16 +392,25 @@ fi
 # Termforge Configuration End
 EOF
 
-# Create simple uninstall script
+# Create uninstall script
 cat > ~/.local/bin/uninstall-termforge << 'EOF'
 #!/bin/bash
 echo "Uninstalling Termforge..."
+
+# Remove configuration from .bashrc
 sed -i '/# Termforge Configuration Start/,/# Termforge Configuration End/d' ~/.bashrc
+
+# Remove installed components
 rm -rf ~/.local/share/blesh
 rm -f ~/.local/bin/starship
 rm -f ~/.local/bin/atuin
+rm -rf ~/.fzf
+
+# Remove this uninstall script
 rm -f ~/.local/bin/uninstall-termforge
+
 echo "Termforge uninstalled. Restart your terminal."
+echo "Note: System packages (curl, git, wget, gawk) were not removed."
 EOF
 chmod +x ~/.local/bin/uninstall-termforge
 
@@ -327,6 +422,11 @@ echo -e "${BLUE}================================${NC}"
 echo
 print_success "Installation completed!"
 echo
+print_status "Installation mode:"
+[ "$USE_SUDO" = false ] && echo "  - No sudo (container/restricted mode)"
+[ "$AUTO_INSTALL_DEPS" = false ] && echo "  - Manual dependency installation"
+[ "$SAFE_MODE" = true ] && echo "  - Safe mode (limited features)"
+echo
 print_status "Installed components: $COMPONENTS_INSTALLED"
 echo
 print_status "Next steps:"
@@ -334,7 +434,7 @@ echo "  1. Restart your terminal or run: source ~/.bashrc"
 echo "  2. If you have issues, restore backup: cp $BACKUP_FILE ~/.bashrc"
 echo "  3. To uninstall, run: uninstall-termforge"
 echo
-if [ "$SAFE_MODE" = true ]; then
-    print_warning "Installed in safe mode. Some features were skipped."
+if [ "$USE_SUDO" = false ]; then
+    print_warning "Installed without sudo. Some features may require manual setup."
 fi
 echo -e "${BLUE}================================${NC}"
