@@ -1,45 +1,43 @@
-# Termforge 🔨
+# Terminal Enhancer 🚀
 
-> Transform your terminal into a modern powerhouse with syntax highlighting, intelligent autocompletion, and a beautiful prompt.
+> Modern terminal setup made simple - syntax highlighting, smart history, fuzzy finding, and beautiful prompts that actually work.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Bash](https://img.shields.io/badge/bash-5.0%2B-blue)](https://www.gnu.org/software/bash/)
+[![Bash](https://img.shields.io/badge/bash-4.0%2B-blue)](https://www.gnu.org/software/bash/)
 [![Platform](https://img.shields.io/badge/platform-linux-lightgrey)](https://www.linux.org/)
-
 
 ## ✨ Features
 
-Termforge combines the best modern terminal tools into a single, cohesive experience:
+Terminal Enhancer provides a hassle-free setup of modern terminal tools:
 
 ### 🎨 Visual Enhancements
-- **Syntax Highlighting** - Real-time syntax highlighting as you type
-- **Auto-suggestions** - Fish-like autosuggestions from your command history
-- **Beautiful Prompt** - Informative and customizable with git, kubernetes, docker status
+- **Syntax Highlighting** - Real-time highlighting with ble.sh
+- **Smart Completions** - Context-aware suggestions as you type
+- **Beautiful Prompt** - Clean, informative prompt with Starship
 
 ### 🚀 Productivity Tools
-- **Smart History** - Enhanced history search with context and timestamps
-- **Fuzzy Finding** - Quick file and command discovery with fzf
-- **IDE-like Completion** - Intelligent tab completion with descriptions
+- **Enhanced History** - Searchable command history with Atuin
+- **Fuzzy Finding** - Quick file/command search with fzf
+- **Auto-configuration** - Everything works immediately after install
 
-### 🔧 DevOps Focused
-- **Kubernetes Integration** - Shows current context and namespace
-- **Docker Status** - Displays active Docker context
-- **Git Awareness** - Branch, status, and repository information
-- **Tool Aliases** - Quick shortcuts for kubectl, docker, terraform
+### 🛡️ Safe & Smart
+- **Automatic Backups** - Your .bashrc is always backed up
+- **Syntax Error Prevention** - Smart configuration to avoid breaks
+- **Fix Tools Included** - Built-in utilities to repair issues
 
 ## 📦 What's Included
 
-- **[ble.sh](https://github.com/akinomyoga/ble.sh)** - Bash Line Editor with IDE features
-- **[Starship](https://starship.rs/)** - Fast, customizable, minimal prompt
-- **[Atuin](https://github.com/ellie/atuin)** - Magical shell history
+- **[ble.sh](https://github.com/akinomyoga/ble.sh)** - Bash Line Editor for IDE-like features
+- **[Starship](https://starship.rs/)** - Fast, customizable cross-shell prompt
+- **[Atuin](https://github.com/ellie/atuin)** - Magical shell history with sync
 - **[fzf](https://github.com/junegunn/fzf)** - Command-line fuzzy finder
 
 ## 🚀 Quick Start
 
-### One-Line Installation
+### Automated Installation (Recommended)
 
 ```bash
-curl -sL https://raw.githubusercontent.com/sohaib1khan/TermForge/refs/heads/main/termforge.sh | bash
+curl -sL https://raw.githubusercontent.com/yourusername/terminal-enhancer/main/terminal-enhancer.sh | bash
 ```
 
 ### Manual Installation
@@ -51,163 +49,145 @@ wget https://raw.githubusercontent.com/sohaib1khan/TermForge/refs/heads/main/ter
 # Make it executable
 chmod +x termforge.sh
 
-# Run the installer
+# Run full installation
 ./termforge.sh
 
-# Run without sudo (for containers or restricted environments)
-./termforge.sh --no-sudo
+# Or run in lite mode (skip Starship)
+./termforge.sh --lite
 
-# Container mode (no sudo, no automatic dependencies)
-./termforge.sh --container
-
-# Skip alias installation
-./termforge.sh --no-aliases
-
-# Minimal installation
-./termforge.sh --minimal
+# Fix existing .bashrc issues
+./termforge.sh --fix
 ```
 
-## 🐳 Container Usage
+## 🔧 Installation Options
 
-Termforge works great in Docker containers and other containerized environments:
+```bash
+# Standard installation
+./termforge.sh
+
+# Lite mode - Skip Starship, use simple prompt
+./termforge.sh --lite
+
+# No sudo - For restricted environments
+./termforge.sh --no-sudo
+
+# Fix mode - Repair .bashrc syntax errors
+./termforge.sh --fix
+
+# Show help
+./termforge.sh --help
+```
+
+## 🛡️ Safety Features
+
+Terminal Enhancer is designed to be bulletproof:
+
+- **Automatic Backups** - Creates timestamped .bashrc backups
+- **Syntax Protection** - Properly structured configurations
+- **Clean Markers** - Easy identification of added content
+- **Fix Utilities** - Built-in tools to repair common issues
+- **Non-destructive** - Preserves your existing configurations
+
+## 🐳 Container & Server Usage
+
+Works perfectly in Docker containers and remote servers:
 
 ```dockerfile
 # In your Dockerfile
-RUN apt update && apt install -y curl git wget gawk
-RUN curl -sL https://raw.githubusercontent.com/sohaib1khan/TermForge/refs/heads/main/termforge.sh | bash -s -- --container
+RUN apt update && apt install -y curl git wget
+RUN curl -sL https://raw.githubusercontent.com/sohaib1khan/TermForge/refs/heads/main/termforge.sh | bash -s -- --no-sudo
 ```
 
-Or run manually in a container:
+Or in containers:
 ```bash
 # Inside container
-./termforge.sh --container
-# or
-./termforge.sh --no-sudo --no-deps
+./termforge.sh --no-sudo
 ```
 
-## 🛡️ Safe Installation
+## 🔨 Included Utilities
 
-Termforge is designed to be non-destructive:
+After installation, you'll have these commands available:
 
-- **Preserves existing aliases** - Only adds aliases that don't already exist
-- **Backs up .bashrc** - Creates timestamped backup before modifications
-- **Checks for existing installations** - Won't duplicate configurations
-- **Optional components** - Use `--skip-aliases` to skip alias installation
-- **No sudo mode** - Use `--no-sudo` for restricted environments
-- **Container mode** - Use `--container` for Docker/Podman environments
-
-## 📋 Prerequisites
-
-- **OS**: Linux (Ubuntu, Debian, RHEL, CentOS, Arch, etc.)
-- **Shell**: Bash 4.0+
-- **Permissions**: Ability to install packages (sudo access)
-
-The installer will automatically install required dependencies:
-- `curl`
-- `git`
-- `gawk`
-- `build-essential`
-
-## 🔧 Configuration
-
-### Starship Prompt
-
-The default configuration is optimized for DevOps workflows. Customize it by editing `~/.config/starship.toml`:
-
-```toml
-# Example: Minimal prompt
-[character]
-success_symbol = "[➜](bold green)"
-error_symbol = "[✗](bold red)"
-
-[kubernetes]
-disabled = false
-format = '[⎈ $context](bold cyan) '
-```
-
-### Bash Aliases
-
-Termforge includes helpful aliases for DevOps tools. **Existing aliases are preserved** - Termforge only adds aliases that don't already exist:
-
-```bash
-k     # kubectl (only if not already defined)
-d     # docker (only if not already defined)
-dc    # docker-compose (only if not already defined)
-tf    # terraform (only if not already defined)
-g     # git (only if not already defined)
-ll    # ls -alh (only if not already defined)
-```
-
-Add your own aliases to `~/.bashrc`:
-
-```bash
-# Custom aliases
-alias kgp='kubectl get pods'
-alias dps='docker ps'
-alias gst='git status'
-```
-
-### Updating Tools
-
-Keep all tools up-to-date with the included update script:
-
-```bash
-update-termforge
-```
+- **`termforge.sh-fix`** - Fix .bashrc syntax errors
+- **`termforge.sh-uninstall`** - Clean uninstall of all components
 
 ## 🎯 Usage Examples
 
-### Smart History Search (Atuin)
+### After Installation
+
+Just run:
 ```bash
-# Search through command history
-ctrl+r
-
-# Search for specific commands
-ctrl+r docker
-
-# View command statistics
-atuin stats
+source ~/.bashrc
 ```
 
-### Fuzzy Finding (fzf)
-```bash
-# Find files
-ctrl+t
+Or open a new terminal - everything works automatically!
 
-# Change directory
-alt+c
+### Using the Tools
 
-# Search command history
-ctrl+r
-```
+**Enhanced History (Atuin)**
+- `Ctrl+R` - Smart history search
+- Type to filter through your command history
+- Arrow keys to navigate results
 
-### IDE-like Features (ble.sh)
-- **Tab**: Intelligent completion with descriptions
-- **Ctrl+Space**: Show all completions
-- **Alt+/**: Dynamic abbreviation expansion
-- **Syntax highlighting**: Automatic as you type
+**Fuzzy Finding (fzf)**
+- `Ctrl+T` - Find files in current directory
+- `Alt+C` - Navigate to directories
+- `Ctrl+R` - Enhanced command history
+
+**Syntax Highlighting (ble.sh)**
+- Automatic as you type
+- `Tab` - Smart completions
+- Error highlighting in red
 
 ## 🛠️ Troubleshooting
 
-### Installation Issues
+### Common Issues
 
-**Problem**: `gawk not found`
+**Syntax errors in .bashrc?**
 ```bash
-sudo apt install gawk  # Debian/Ubuntu
-sudo yum install gawk  # RHEL/CentOS
-```
-
-**Problem**: Prompt not changing
-```bash
+termforge.sh-fix
 source ~/.bashrc
-# or open a new terminal
 ```
 
-### Performance Issues
+**Want to start fresh?**
+```bash
+termforge.sh-uninstall
+./termforge.sh
+```
 
-If you experience slowness:
+**Need a minimal setup?**
+```bash
+./termforge.sh --lite
+```
 
-1. Disable unused features in `~/.config/starship.toml`
-2. Reduce ble.sh features in `~/.blerc`
-3. Check `~/.bashrc` for duplicate sourcing
+### Manual Fixes
 
+If you encounter issues:
+
+1. **Restore backup**:
+   ```bash
+   cp ~/.bashrc.backup.* ~/.bashrc
+   source ~/.bashrc
+   ```
+
+2. **Remove all enhancements**:
+   ```bash
+   sed -i '/# === Terminal Enhancer Configuration ===/,/# === End Terminal Enhancer Configuration ===/d' ~/.bashrc
+   ```
+
+3. **Try lite mode**:
+   ```bash
+   ./termforge.sh --lite
+   ```
+
+## 📋 Prerequisites
+
+- **OS**: Linux (Ubuntu, Debian, RHEL, CentOS, Arch)
+- **Shell**: Bash 4.0+
+- **Network**: Internet connection for downloads
+
+Required packages (auto-installed):
+- `curl`
+- `git` 
+- `wget`
+- `gawk` (for ble.sh)
