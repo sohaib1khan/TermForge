@@ -1,5 +1,15 @@
 # Terminal Enhancer 🚀
 
+<div align="center">
+
+[![TermForge Interactive Documentation](https://img.shields.io/badge/🚀_INTERACTIVE-DOCUMENTATION-2ea043?style=for-the-badge&labelColor=0d1117&color=238636&logoColor=white)](https://sohaib1khan.github.io/TermForge/)
+
+**✨ Complete Setup Guide | 🛠️ Tool Details | 💡 Usage Examples | 🔧 Troubleshooting**
+
+---
+
+</div>
+
 > Modern terminal setup made simple - syntax highlighting, smart history, fuzzy finding, and beautiful prompts that actually work.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
