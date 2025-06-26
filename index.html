@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TermForge - Terminal Enhancer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #c9d1d9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(13, 17, 23, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid #30363d;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 25%, #1f883d 50%, #196c2e 75%, #0969da 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="terminal" width="20" height="20" patternUnits="userSpaceOnUse"><text x="2" y="15" font-family="monospace" font-size="8" fill="rgba(255,255,255,0.1)">$</text></pattern></defs><rect width="100" height="100" fill="url(%23terminal)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.4em;
+            opacity: 0.95;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header .subtitle {
+            font-size: 1em;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .stats-bar {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2ea043;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .terminal-prompt {
+            background: #0d1117;
+            color: #2ea043;
+            padding: 15px 20px;
+            font-family: 'Fira Code', monospace;
+            border-left: 4px solid #2ea043;
+            margin: 20px 0;
+        }
+
+        .tabs {
+            display: flex;
+            background: linear-gradient(90deg, #21262d 0%, #30363d 100%);
+            border-bottom: 2px solid #30363d;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px 25px;
+            text-align: center;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #8b949e;
+            transition: all 0.3s ease;
+            position: relative;
+            font-family: inherit;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #2ea043 0%, #238636 100%);
+            color: white;
+            border-bottom: 3px solid #1f883d;
+            box-shadow: 0 -2px 10px rgba(46, 160, 67, 0.3);
+        }
+
+        .tab:hover:not(.active) {
+            background: #30363d;
+            color: #c9d1d9;
+        }
+
+        .content {
+            min-height: 700px;
+            position: relative;
+            background: rgba(13, 17, 23, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: rgba(33, 38, 45, 0.8);
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid #2ea043;
+            transition: all 0.3s ease;
+            border: 1px solid #30363d;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(33, 38, 45, 1);
+            box-shadow: 0 12px 30px rgba(46, 160, 67, 0.2);
+            border-left-color: #1f883d;
+        }
+
+        .feature-card h3 {
+            color: #2ea043;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-card p {
+            color: #8b949e;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            color: #c9d1d9;
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #2ea043;
+            font-size: 0.8em;
+        }
+
+        /* Installation Steps */
+        .install-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .install-step {
+            display: flex;
+            align-items: flex-start;
+            background: rgba(33, 38, 45, 0.6);
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 5px solid #0969da;
+            transition: all 0.3s ease;
+        }
+
+        .install-step:hover {
+            background: rgba(33, 38, 45, 0.8);
+            transform: translateX(10px);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #0969da 0%, #0550ae 100%);
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-right: 25px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
+        }
+
+        .step-content h4 {
+            color: #c9d1d9;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .step-content p {
+            color: #8b949e;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Fira Code', monospace;
+            color: #2ea043;
+            border: 1px solid #30363d;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: "$ ";
+            color: #0969da;
+            font-weight: bold;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #21262d;
+            color: #8b949e;
+            border: 1px solid #30363d;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #30363d;
+            color: #c9d1d9;
+        }
+
+        /* Tools Section */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .tool-card {
+            background: rgba(33, 38, 45, 0.8);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #30363d;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #f85149, #da3633, #b93529);
+        }
+
+        .tool-card:hover {
+            transform: scale(1.03);
+            background: rgba(33, 38, 45, 1);
+            box-shadow: 0 8px 25px rgba(248, 81, 73, 0.2);
+        }
+
+        .tool-card h4 {
+            color: #f85149;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-description {
+            color: #8b949e;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .tool-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tool-features li {
+            color: #c9d1d9;
+            padding: 3px 0;
+            padding-left: 15px;
+            position: relative;
+            font-size: 0.9em;
+        }
+
+        .tool-features li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #f85149;
+            font-weight: bold;
+        }
+
+        /* Usage Demo */
+        .demo-terminal {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #30363d;
+            font-family: 'Fira Code', monospace;
+            position: relative;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .red { background: #f85149; }
+        .yellow { background: #d29922; }
+        .green { background: #2ea043; }
+
+        .terminal-title {
+            margin-left: 15px;
+            color: #8b949e;
+            font-size: 0.9em;
+        }
+
+        .terminal-line {
+            display: flex;
+            margin: 8px 0;
+            animation: typewriter 2s steps(40) infinite;
+        }
+
+        .prompt {
+            color: #2ea043;
+            margin-right: 10px;
+        }
+
+        .command {
+            color: #79c0ff;
+        }
+
+        .output {
+            color: #8b949e;
+            margin-left: 20px;
+        }
+
+        @keyframes typewriter {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        /* Info Boxes */
+        .info-box {
+            background: rgba(9, 105, 218, 0.1);
+            border: 1px solid rgba(9, 105, 218, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #0969da;
+        }
+
+        .info-box h4 {
+            color: #79c0ff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .warning-box {
+            background: rgba(209, 153, 34, 0.1);
+            border: 1px solid rgba(209, 153, 34, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #d19922;
+        }
+
+        .warning-box h4 {
+            color: #e3b341;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .success-box {
+            background: rgba(46, 160, 67, 0.1);
+            border: 1px solid rgba(46, 160, 67, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #2ea043;
+        }
+
+        .success-box h4 {
+            color: #56d364;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .features-grid, .tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 2.5em;
+            }
+
+            .install-step {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .step-number {
+                margin-bottom: 15px;
+                margin-right: 0;
+            }
+
+            .stats-bar {
+                gap: 30px;
+            }
+        }
+
+        .highlight {
+            background: rgba(46, 160, 67, 0.2);
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #56d364;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>🚀 TermForge</h1>
+                <p>Modern Terminal Setup Made Simple</p>
+                <p class="subtitle">Syntax highlighting, smart history, fuzzy finding, and beautiful prompts that actually work</p>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-number">4</span>
+                    <div class="stat-label">Modern Tools</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">1</span>
+                    <div class="stat-label">Command Setup</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">0</span>
+                    <div class="stat-label">Config Required</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">∞</span>
+                    <div class="stat-label">Productivity Boost</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">✨ Overview</button>
+            <button class="tab" onclick="showTab('installation')">🚀 Installation</button>
+            <button class="tab" onclick="showTab('tools')">🛠️ Tools</button>
+            <button class="tab" onclick="showTab('usage')">💡 Usage</button>
+            <button class="tab" onclick="showTab('troubleshooting')">🔧 Troubleshooting</button>
+        </div>
+
+        <div class="content">
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview">
+                <div class="terminal-prompt">
+                    <strong>user@terminal:~$</strong> Transform your terminal experience in seconds
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>🎨 Visual Enhancements</h3>
+                        <p>Transform your terminal with modern IDE-like features that make command-line work enjoyable.</p>
+                        <ul class="feature-list">
+                            <li><strong>Real-time syntax highlighting</strong> with ble.sh</li>
+                            <li><strong>Smart auto-completions</strong> as you type</li>
+                            <li><strong>Beautiful prompts</strong> with Starship</li>
+                            <li><strong>Error highlighting</strong> prevents mistakes</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🚀 Productivity Tools</h3>
+                        <p>Supercharge your workflow with intelligent history and lightning-fast file navigation.</p>
+                        <ul class="feature-list">
+                            <li><strong>Searchable command history</strong> with Atuin</li>
+                            <li><strong>Fuzzy file finding</strong> with fzf</li>
+                            <li><strong>Cross-session sync</strong> of command history</li>
+                            <li><strong>Auto-configuration</strong> works immediately</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🛡️ Safe & Smart</h3>
+                        <p>Enterprise-grade safety features ensure your system stays stable and recoverable.</p>
+                        <ul class="feature-list">
+                            <li><strong>Automatic backups</strong> of .bashrc</li>
+                            <li><strong>Syntax error prevention</strong> with validation</li>
+                            <li><strong>Built-in fix utilities</strong> for rapid recovery</li>
+                            <li><strong>Non-destructive installation</strong> preserves configs</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🐳 Universal Compatibility</h3>
+                        <p>Works everywhere - from local development to Docker containers and remote servers.</p>
+                        <ul class="feature-list">
+                            <li><strong>Linux distributions</strong> (Ubuntu, RHEL, Arch)</li>
+                            <li><strong>Docker containers</strong> and restricted environments</li>
+                            <li><strong>Remote servers</strong> via SSH</li>
+                            <li><strong>Bash 4.0+</strong> compatibility</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <h4>🎯 Perfect For</h4>
+                    <p><strong>DevOps Engineers, Developers, System Administrators, and Power Users</strong> who want a modern terminal experience without the complexity of manual configuration. Ideal for teams wanting standardized, productive terminal environments.</p>
+                </div>
+            </div>
+
+            <!-- Installation Tab -->
+            <div class="tab-content" id="installation">
+                <div class="install-steps">
+                    <div class="install-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Quick Install (Recommended)</h4>
+                            <p>One-command installation that downloads and configures everything automatically:</p>
+                            <div class="code-block">
+                                curl -sL https://raw.githubusercontent.com/sohaib1khan/TermForge/refs/heads/main/termforge.sh | bash
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <p>This method is <span class="highlight">perfect for most users</span> and includes safety checks and automatic backups.</p>
+                        </div>
+                    </div>
+
+                    <div class="install-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Manual Installation</h4>
+                            <p>For users who prefer to review the script before execution:</p>
+                            <div class="code-block">
+                                wget https://raw.githubusercontent.com/sohaib1khan/TermForge/refs/heads/main/termforge.sh
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-block">
+                                chmod +x termforge.sh && ./termforge.sh
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="install-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Activate Your Enhanced Terminal</h4>
+                            <p>After installation, reload your terminal configuration:</p>
+                            <div class="code-block">
+                                source ~/.bashrc
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <p>Or simply open a new terminal window - everything works automatically!</p>
+                        </div>
+                    </div>
+
+                    <div class="install-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Installation Options</h4>
+                            <p>Customize your installation with these flags:</p>
+                            <div class="code-block">
+                                ./termforge.sh --lite          # Skip Starship, use simple prompt
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-block">
+                                ./termforge.sh --no-sudo       # For restricted environments
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-block">
+                                ./termforge.sh --fix           # Fix existing .bashrc issues
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>📋 Prerequisites</h4>
+                    <p>TermForge automatically installs required dependencies: <strong>curl</strong>, <strong>git</strong>, <strong>wget</strong>, and <strong>gawk</strong>. Works on all major Linux distributions with Bash 4.0+.</p>
+                </div>
+
+                <div class="warning-box">
+                    <h4>🐳 Docker & Container Usage</h4>
+                    <p>In Docker containers or environments without sudo access, use the <code>--no-sudo</code> flag. TermForge is perfect for development containers and CI/CD environments.</p>
+                </div>
+            </div>
+
+            <!-- Tools Tab -->
+            <div class="tab-content" id="tools">
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <h4>🎨 ble.sh</h4>
+                        <p class="tool-description">Bash Line Editor that transforms your shell into an IDE-like experience with real-time features.</p>
+                        <ul class="tool-features">
+                            <li>Real-time syntax highlighting</li>
+                            <li>Smart auto-completion</li>
+                            <li>Multi-line editing support</li>
+                            <li>Error highlighting in red</li>
+                            <li>History search integration</li>
+                            <li>Vim/Emacs key bindings</li>
+                        </ul>
+                    </div>
+
+                    <div class="tool-card">
+                        <h4>⭐ Starship</h4>
+                        <p class="tool-description">Fast, customizable cross-shell prompt that's beautiful and informative without being overwhelming.</p>
+                        <ul class="tool-features">
+                            <li>Git status integration</li>
+                            <li>Language version detection</li>
+                            <li>Directory information</li>
+                            <li>Execution time display</li>
+                            <li>Custom themes support</li>
+                            <li>Lightning-fast rendering</li>
+                        </ul>
+                    </div>
+
+                    <div class="tool-card">
+                        <h4>📚 Atuin</h4>
+                        <p class="tool-description">Magical shell history replacement that provides searchable, sync-able command history across sessions.</p>
+                        <ul class="tool-features">
+                            <li>Sqlite-backed storage</li>
+                            <li>Cross-session search</li>
+                            <li>Command context tracking</li>
+                            <li>Encrypted cloud sync</li>
+                            <li>Advanced filtering</li>
+                            <li>Statistics and insights</li>
+                        </ul>
+                    </div>
+
+                    <div class="tool-card">
+                        <h4>🔍 fzf</h4>
+                        <p class="tool-description">Command-line fuzzy finder that revolutionizes file navigation and command discovery.</p>
+                        <ul class="tool-features">
+                            <li>Fuzzy file searching</li>
+                            <li>Command history filtering</li>
+                            <li>Directory navigation</li>
+                            <li>Preview window support</li>
+                            <li>Custom key bindings</li>
+                            <li>Integration with other tools</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="demo-terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-buttons">
+                            <div class="terminal-button red"></div>
+                            <div class="terminal-button yellow"></div>
+                            <div class="terminal-button green"></div>
+                        </div>
+                        <div class="terminal-title">Enhanced Terminal Experience</div>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">user@enhanced:~$</span>
+                        <span class="command">git status</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="output">✓ Repository clean • main branch • ↑2 commits</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">user@enhanced:~$</span>
+                        <span class="command">ls -la | fzf</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="output">🔍 Interactive file search with preview...</span>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <h4>🔧 All Tools Configured</h4>
+                    <p>TermForge automatically configures all tools to work together seamlessly. No manual configuration required - everything works immediately after installation.</p>
+                </div>
+            </div>
+
+            <!-- Usage Tab -->
+            <div class="tab-content" id="usage">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>🔍 Enhanced History Search</h3>
+                        <p>Revolutionary command history that learns from your patterns.</p>
+                        <div class="code-block">
+                            Ctrl+R    # Smart history search with Atuin<br>
+                            ↑/↓       # Navigate through results<br>
+                            Tab       # Accept suggestion
+                        </div>
+                        <ul class="feature-list">
+                            <li>Search across all sessions</li>
+                            <li>Context-aware suggestions</li>
+                            <li>Frequency-based ranking</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>📁 Fuzzy File Finding</h3>
+                        <p>Lightning-fast file and directory navigation.</p>
+                        <div class="code-block">
+                            Ctrl+T    # Find files in current directory<br>
+                            Alt+C     # Navigate to directories<br>
+                            **&lt;TAB&gt;  # Fuzzy completion
+                        </div>
+                        <ul class="feature-list">
+                            <li>Preview window support</li>
+                            <li>Recursive directory search</li>
+                            <li>Custom filtering options</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>✨ Smart Syntax Highlighting</h3>
+                        <p>Real-time feedback as you type commands.</p>
+                        <div class="code-block">
+                            # Valid commands appear in green<br>
+                            # Invalid commands turn red<br>
+                            # Strings and paths highlighted
+                        </div>
+                        <ul class="feature-list">
+                            <li>Instant error detection</li>
+                            <li>Path validation</li>
+                            <li>Syntax error prevention</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🎯 Intelligent Completions</h3>
+                        <p>Context-aware suggestions that speed up your workflow.</p>
+                        <div class="code-block">
+                            Tab       # Smart completions<br>
+                            Tab Tab   # Show all options<br>
+                            Shift+Tab # Reverse completion
+                        </div>
+                        <ul class="feature-list">
+                            <li>Command argument suggestions</li>
+                            <li>File path completions</li>
+                            <li>Git branch awareness</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="demo-terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-buttons">
+                            <div class="terminal-button red"></div>
+                            <div class="terminal-button yellow"></div>
+                            <div class="terminal-button green"></div>
+                        </div>
+                        <div class="terminal-title">Live Demo - Try These Commands</div>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">enhanced@terminal:~/projects$</span>
+                        <span class="command">git checkout</span> <span class="output" style="color: #56d364;"># Smart git completions</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">enhanced@terminal:~/projects$</span>
+                        <span class="command">docker run --rm -it</span> <span class="output" style="color: #56d364;"># Container suggestions</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">enhanced@terminal:~/projects$</span>
+                        <span class="command">cd **</span><span style="color: #f85149;">TAB</span> <span class="output" style="color: #56d364;"># Fuzzy directory search</span>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 Pro Tips</h4>
+                    <ul class="feature-list">
+                        <li><strong>Double Tab</strong> for command help and options</li>
+                        <li><strong>Ctrl+R</strong> then type to search command history</li>
+                        <li><strong>Alt+.</strong> to insert last argument from previous command</li>
+                        <li><strong>Ctrl+L</strong> to clear screen while keeping command</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Troubleshooting Tab -->
+            <div class="tab-content" id="troubleshooting">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>🔧 Quick Fixes</h3>
+                        <p>Built-in utilities to resolve common issues instantly.</p>
+                        <div class="code-block">
+                            termforge.sh-fix        # Fix .bashrc syntax errors<br>
+                            termforge.sh-uninstall  # Clean removal
+                        </div>
+                        <ul class="feature-list">
+                            <li>Automatic syntax validation</li>
+                            <li>Backup restoration</li>
+                            <li>Clean uninstall option</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🛡️ Safety Features</h3>
+                        <p>Multiple layers of protection for your terminal configuration.</p>
+                        <ul class="feature-list">
+                            <li>Timestamped .bashrc backups</li>
+                            <li>Configuration validation</li>
+                            <li>Rollback mechanisms</li>
+                            <li>Non-destructive installation</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>⚠️ Common Issues</h3>
+                        <p>Solutions for the most frequent problems.</p>
+                        <ul class="feature-list">
+                            <li><strong>Syntax errors:</strong> Run termforge.sh-fix</li>
+                            <li><strong>Slow startup:</strong> Use --lite mode</li>
+                            <li><strong>Permission issues:</strong> Use --no-sudo</li>
+                            <li><strong>Conflicts:</strong> Restore from backup</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🔄 Manual Recovery</h3>
+                        <p>Emergency procedures for worst-case scenarios.</p>
+                        <div class="code-block">
+                            # Restore from backup<br>
+                            cp ~/.bashrc.backup.* ~/.bashrc
+                        </div>
+                        <div class="code-block">
+                            # Complete removal<br>
+                            sed -i '/Terminal Enhancer/,/End Terminal Enhancer/d' ~/.bashrc
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <h4>⚠️ If Something Goes Wrong</h4>
+                    <p>TermForge creates automatic backups of your .bashrc file with timestamps. You can always restore your original configuration using: <code>cp ~/.bashrc.backup.TIMESTAMP ~/.bashrc</code></p>
+                </div>
+
+                <div class="success-box">
+                    <h4>✅ Verification Steps</h4>
+                    <ol style="color: #c9d1d9; padding-left: 20px; line-height: 1.8;">
+                        <li>Check if syntax highlighting works while typing</li>
+                        <li>Test Ctrl+R for history search functionality</li>
+                        <li>Verify Ctrl+T opens fuzzy file finder</li>
+                        <li>Confirm prompt shows git status (if in git repo)</li>
+                        <li>Test Tab completion for enhanced suggestions</li>
+                    </ol>
+                </div>
+
+                <div class="info-box">
+                    <h4>🆘 Getting Help</h4>
+                    <p>If you encounter issues not covered here:</p>
+                    <ul class="feature-list">
+                        <li>Check the <a href="https://github.com/sohaib1khan/TermForge/issues" style="color: #79c0ff;">GitHub Issues</a> page</li>
+                        <li>Run <code>termforge.sh --help</code> for detailed options</li>
+                        <li>Use <code>termforge.sh --fix</code> for automatic repairs</li>
+                        <li>Report bugs with system details and error messages</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function copyCode(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.textContent.replace('Copy', '').trim();
+            
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                button.style.background = '#2ea043';
+                button.style.color = '#ffffff';
+                
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.style.background = '#21262d';
+                    button.style.color = '#8b949e';
+                }, 2000);
+            });
+        }
+
+        // Add interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.feature-card, .tool-card, .install-step');
+            
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    if (this.classList.contains('install-step')) {
+                        this.style.transform = 'translateX(10px)';
+                    } else {
+                        this.style.transform = 'translateY(-5px)';
+                    }
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'none';
+                });
+            });
+
+            // Terminal animation
+            const terminalLines = document.querySelectorAll('.terminal-line');
+            terminalLines.forEach((line, index) => {
+                line.style.animationDelay = `${index * 0.5}s`;
+            });
+        });
+    </script>
+</body>
+</html>
