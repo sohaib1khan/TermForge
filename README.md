@@ -1,10 +1,10 @@
-# Terminal Enhancer 🚀
+# Terminal Enhancer
 
 <div align="center">
 
 [![TermForge Interactive Documentation](https://img.shields.io/badge/🚀_INTERACTIVE-DOCUMENTATION-2ea043?style=for-the-badge&labelColor=0d1117&color=238636&logoColor=white)](https://sohaib1khan.github.io/TermForge/)
 
-**✨ Complete Setup Guide | 🛠️ Tool Details | 💡 Usage Examples | 🔧 Troubleshooting**
+**Complete Setup Guide |  Tool Details |  Usage Examples |  Troubleshooting**
 
 ---
 
@@ -16,33 +16,33 @@
 [![Bash](https://img.shields.io/badge/bash-4.0%2B-blue)](https://www.gnu.org/software/bash/)
 [![Platform](https://img.shields.io/badge/platform-linux-lightgrey)](https://www.linux.org/)
 
-## ✨ Features
+## Features
 
 Terminal Enhancer provides a hassle-free setup of modern terminal tools:
 
-### 🎨 Visual Enhancements
+### Visual Enhancements
 - **Syntax Highlighting** - Real-time highlighting with ble.sh
 - **Smart Completions** - Context-aware suggestions as you type
 - **Beautiful Prompt** - Clean, informative prompt with Starship
 
-### 🚀 Productivity Tools
+### Productivity Tools
 - **Enhanced History** - Searchable command history with Atuin
 - **Fuzzy Finding** - Quick file/command search with fzf
 - **Auto-configuration** - Everything works immediately after install
 
-### 🛡️ Safe & Smart
+### Safe & Smart
 - **Automatic Backups** - Your .bashrc is always backed up
 - **Syntax Error Prevention** - Smart configuration to avoid breaks
 - **Fix Tools Included** - Built-in utilities to repair issues
 
-## 📦 What's Included
+## What's Included
 
 - **[ble.sh](https://github.com/akinomyoga/ble.sh)** - Bash Line Editor for IDE-like features
 - **[Starship](https://starship.rs/)** - Fast, customizable cross-shell prompt
 - **[Atuin](https://github.com/ellie/atuin)** - Magical shell history with sync
 - **[fzf](https://github.com/junegunn/fzf)** - Command-line fuzzy finder
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Automated Installation (Recommended)
 
@@ -69,7 +69,7 @@ chmod +x termforge.sh
 ./termforge.sh --fix
 ```
 
-## 🔧 Installation Options
+## Installation Options
 
 ```bash
 # Standard installation
@@ -88,7 +88,7 @@ chmod +x termforge.sh
 ./termforge.sh --help
 ```
 
-## 🛡️ Safety Features
+## Safety Features
 
 Terminal Enhancer is designed to be bulletproof:
 
@@ -98,7 +98,7 @@ Terminal Enhancer is designed to be bulletproof:
 - **Fix Utilities** - Built-in tools to repair common issues
 - **Non-destructive** - Preserves your existing configurations
 
-## 🐳 Container & Server Usage
+## Container & Server Usage
 
 Works perfectly in Docker containers and remote servers:
 
@@ -114,14 +114,14 @@ Or in containers:
 ./termforge.sh --no-sudo
 ```
 
-## 🔨 Included Utilities
+## Included Utilities
 
 After installation, you'll have these commands available:
 
 - **`termforge.sh-fix`** - Fix .bashrc syntax errors
 - **`termforge.sh-uninstall`** - Clean uninstall of all components
 
-## 🎯 Usage Examples
+## Usage Examples
 
 ### After Installation
 
@@ -149,7 +149,7 @@ Or open a new terminal - everything works automatically!
 - `Tab` - Smart completions
 - Error highlighting in red
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -190,7 +190,7 @@ If you encounter issues:
    ./termforge.sh --lite
    ```
 
-## 📋 Prerequisites
+## Prerequisites
 
 - **OS**: Linux (Ubuntu, Debian, RHEL, CentOS, Arch)
 - **Shell**: Bash 4.0+
